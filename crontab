@@ -1,0 +1,10 @@
+#------------------------------------------------------------------------
+# This file is checked in, do not modify it via crontab
+# Modify the checked in version and run "gmake cron"
+#------------------------------------------------------------------------
+# First gather the http logs for later analysis
+25 4 * * 0 cat < /home2/www/logs/access_log.www.technocracy.org >> /home2/trent/access_log
+#
+# weekly update
+#
+12 1 * * 1 (cd /home2/trent/public_html && /usr/local/bin/gmake feature)

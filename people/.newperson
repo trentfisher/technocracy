@@ -1,0 +1,22 @@
+#!/usr/local/bin/perl
+#
+$fullname = join(" ", @ARGV);
+$filename = $fullname;
+$filename =~ tr/[A-Z]/[a-z]/;
+$filename =~ s/\.//g;
+$filename =~ s/\s+/-/g;
+$filename .= ".html";
+
+print $fullname, " -> ", $filename, "\n";
+
+die "$filename already exists\n" if -f $filename;
+
+open(T, "template.html") || die;
+open(N, ">$filename") || die;
+while(<T>)
+{
+	s/NAME/$fullname/;
+	print N;
+}
+close(T);
+close(N);

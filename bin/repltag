@@ -1,0 +1,59 @@
+#!/usr/local/bin/perl
+#
+# Replaces a chunk of HTML between a pair of tags
+#
+
+require 5.002;	 # or 5.001 iff you remove the comments!
+require "ctime.pl";
+require 'getopts.pl';
+
+my $now = &ctime(time);
+(my $prog_name = $0) =~ s|^.*/(.*)|$1|;   # who I am, keep only base name
+
+undef $/;
+
+$starttag="weekly-feature-start";
+$endtag  ="weekly-feature-end";
+
+&Getopts('t:dv'); 
+
+$debug = $opt_d;
+$verbose = $opt_v+$opt_d;
+($starttag, $endtag) = split(/,/, $opt_t) if $opt_t;
+
+@text = <STDIN>;
+
+while ($filename = shift)
+{
+	print "replacing in $filename....\n" if $verbose;
+
+	unless (rename($filename, $filename.".bak"))
+	{
+		warn "rename $filename: $!\n";
+		next;
+	}
+    	unless (open(ORIG, $filename.".bak"))
+	{
+		warn "can't open $filename.bak: $!";
+		next;
+    	}
+    	unless (open(NEW, ">$filename"))
+	{
+		warn "can't open $filename: $!";
+		next;
+    	}
+    	my $html = <ORIG>;
+    	$html =~ s {
+		< \s*!-- \s* $starttag \s* --\s*>       # begin tag
+		.*?
+		< \s*!-- \s* $endtag \s* --\s*>	        # end tag
+	}{<!-- $starttag -->\n@text<!-- $endtag -->}gsix;
+
+	print NEW $html;
+
+	close(NEW);
+	close(ORIG);
+}
+
+exit 0;
+

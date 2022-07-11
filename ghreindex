@@ -1,0 +1,27 @@
+#!/bin/sh
+
+
+# CRONFILE FOR ARCHIVE Technocracy Web Page Search IN DIRECTORY /u/trent/public_html/technocracy
+
+# Do the indexing
+/u/trent/bin/glimpseindex -H /u/trent/public_html/technocracy -o -t /u/trent/public_html/technocracy
+
+# now change the directory and set the permissions
+cd /u/trent/public_html/technocracy
+chmod a+r .glimpse_*
+
+
+# Regenerate the index files
+#/u/trent/bin/ghgenhtml /u/trent/public_html/technocracy
+
+PATH=${PATH}:/u/trent/bin:
+
+files=`find . \( -name incoming -prune \) -o \
+	-name '*.html' \
+	! -name template.html ! -name index.html ! -name ghindex.html \
+	-print`
+indexer -ati "Master Article Index" -s title $files >master-index.html
+indexer -ati "Master Article Index (sorted by author)" -s author $files >master-author-index.html
+indexer -ati "Master Article Index (sorted by date)" -s date $files >master-date-index.html
+
+

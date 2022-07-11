@@ -1,0 +1,85 @@
+#!/usr/bin/perl
+#
+undef $/;
+$base = "/home/trent/public_html/technocracy";
+$basetitle = &gettitle($base);
+chop($pwd = `pwd`);
+
+foreach $i (@ARGV)
+{
+	$dotdot = "";
+
+	$i = $pwd."/".$i unless $i =~ m,^/,;
+
+	@path = split(m,/+,, $i);
+	$file = pop(@path);
+	if ($file eq "index.html" || $file eq "index.html.bak")
+	{
+		$dotdot = "../";
+		pop(@path);
+	}
+	@line = (&gettitle($i));
+
+	foreach $d (reverse @path)
+	{
+		local($thisfile)  = pop(@path);
+		local($thistitle) = &gettitle("/" . join("/", @path) .
+					      "/" . $thisfile);
+		unshift(@line, sprintf("<a href=\"%s%s\">%s</a>",
+				    $dotdot, "index.html", $thistitle));
+	        last if $thistitle eq $basetitle;
+		$dotdot .= "../";
+	}
+
+	print <<SPAM;
+<!-- Navigation bar -->
+<table bgcolor="#C0C0C0" border=3 cellspacing=0 width="100%" class=navbar>
+  <tr>
+    <td>
+      <img src="${dotdot}images/smonad.gif" alt="" vspace=0 WIDTH=12 HEIGHT=12>
+      <small><strong> 
+SPAM
+        print "\t", join(" -&gt;\n\t", @line), "\n";
+	print <<SPAM;
+      </strong></small>
+    </td>
+    <td align=RIGHT width="5%">
+      <small><strong><a href="${dotdot}ghindex.html">Search</a></strong></small>
+    </td>
+  </tr>
+</table>
+SPAM
+}
+
+sub gettitle
+{
+	local($file) = @_;
+	local($html, $title);
+
+	$file .= "/index.html" if -d $file;
+
+	unless (open(F, $file))
+	{
+		warn "cannot open $file: $!\n";
+		return "unknown";
+	}
+	$html = <F>;
+        while ( $html =~ m{                      
+                           < \s* TITLE .*? >            # begin tag
+                           \s* (.*?) \s*                 # contents
+                           < \s* / \s* TITLE .*? >        # end tag
+                          }gsix)
+	{
+                ($title = $1 || "UNTITLED") =~ s/\s+/ /g;
+	}
+
+	$title =~ s/Technocracy Home Page/Technocracy/;
+	$title =~ s/Technocracy Periodicals/Periodicals/;
+	$title =~ s/[^,]+, (\d)\S+ quarter 19(\d+), No. (\d+).*/Q$1, $2 \#$3/;
+	$title =~ s/The Northwest Technocrat/NW Technocrat/;
+	$title =~ s/[^,]+, (\S+) 19(\d+), No. (\d+).*/$1 $2, \#$3/;
+	$title =~ s/[^,]+, Series A, No. (\d+), (\S+) 19(\d+)/A$1, $2 $3/;
+	$title =~ s/Index of Technocracy Pamphlets/Pamphlets/;
+	$title =~ s/Technocracy Information Briefs/Info. Briefs/;
+	return($title);
+}

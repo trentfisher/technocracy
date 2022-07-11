@@ -1,0 +1,126 @@
+#!/usr/local/bin/perl
+#
+# pick something out of a calendar data file
+#
+# format:
+#	date
+#	text...
+#	\n
+#
+
+require 5.002;	 # or 5.001 iff you remove the comments!
+
+($edir = $0) =~ s/\/[^\/]*$//g;
+push(@INC, $edir);
+require "ctime.pl";
+require 'getopts.pl';
+require 'timelocal.pl';
+require 'dates.pl';
+
+my $now = time;
+(my $prog_name = $0) =~ s|^.*/(.*)|$1|;   # who I am, keep only base name
+
+&Getopts('clD:dvr'); 
+$debug = $opt_d;
+$verbose = $opt_v+$opt_d;
+$now     = &timelocal(&uncctime($opt_D)) if $opt_D;
+$current = $opt_c;
+$list    = $opt_l;
+$reverse = $opt_r;
+
+if ($#ARGV != 0)
+{
+	die "usage: $prog_name [-dvcl] [-D date] dbfile\n";
+}
+%db = &readcalfile($ARGV[0]);
+
+if ($current)
+{
+	foreach $d (keys %db)
+	{
+		printf "d = %s, try = %s, now = %s\n", &cctime($d),
+		       &cctime($try), &cctime($now) if $debug;
+		$try = $d if ($d <= $now && $d > $try);
+	}
+
+	die "nothing found for ", &cctime($now) unless $try;
+
+	printf "%s:\n%s", &justdate(&cctime($try)), $db{$try};
+}
+elsif ($list)
+{
+	print "<dl>\n";
+	if ($reverse)
+	{
+		foreach $d (sort {$b <=> $a} keys %db)
+		{
+		        next if ($d > $now);
+			printf "<dt>%s<dd>\n%s\n",
+			       &justdate(&cctime($d)), $db{$d};
+		}
+	}
+	else
+	{
+		foreach $d (sort {$a <=> $b} keys %db)
+		{
+		        last if ($d >= $now);
+			printf "<dt>%s<dd>\n%s\n",
+			       &justdate(&cctime($d)), $db{$d};
+		}
+	}
+	print "</dl>\n";
+}
+else
+{
+	die "what do you want me to do?\n";
+}
+
+exit 0;
+
+sub justdate
+{
+	local($s) = @_;
+
+	$s =~ s/\.\d+:\d+:\d+.*//;
+	return $s;
+}
+
+sub readcalfile
+{
+	local($file) = @_;
+	local($d, $acc);
+	local($_);
+	local(%list);
+
+	unless(open(F, $file))
+	{
+		die "cannot open $file: $!\n";
+	}
+	while(<F>)
+	{
+		if (/^\d\d?-\w\w\w-\d+/ && !$acc)
+		{
+			$d = &timelocal(&uncctime($_));
+		}
+		elsif (/^\s+$/)
+		{
+			$list{$d} = $acc if $d;
+			$d = $acc = undef;
+		}
+		else
+		{
+			$acc .= $_;
+		}
+	}
+	close(F);
+
+	# whatever was left
+	$list{$d} = $acc;
+
+	return %list;
+}
+
+sub log
+{
+	die @_;
+}

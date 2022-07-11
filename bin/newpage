@@ -1,0 +1,72 @@
+#!/bin/sh
+
+if [ "$1" = "-a" ]
+then
+	article=1
+	shift
+fi
+
+for i in $*
+do
+	cat > $i <<SPAM
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<head>
+  <title>TITLE</title>
+  <meta http-equiv="Content-Language" content="en">
+  <meta name="author" content="AUTHOR">
+  <meta name="copyright" content="1998 Technocracy, Inc.">
+  <link rev=made href="mailto:trent@technocracy.org">
+</head>
+<body>
+SPAM
+
+navbar $i >> $i
+
+cat >> $i <<SPAM
+<h1>TITLE</h1>
+SPAM
+
+test "$article" && cat >> $i <<SPAM
+<!--AUTHOR--><h3>AUTHOR</h3> 
+<!--DATE--><h4>year</h4>
+
+<hr>
+<blockquote>
+<h5>Published in:</h5>
+<ul>
+  <li> some magazine, somewhere
+</ul>
+<h5>See also:</h5>
+<ul>
+  <li> some other article
+</ul>
+Notes about this article should go here
+<p>
+maybe some more notes
+</blockquote>
+<hr>
+
+Put the article text here
+
+SPAM
+
+cat >> $i <<SPAM
+<hr>
+<address>
+Copyright &copy; 1998 Technocracy, Inc.
+<br>
+Feedback and suggestions are welcome, send mail to
+<a href="mailto:webmaster@technocracy.org">webmaster@technocracy.org</a>
+<br>
+<!-- hhmts start -->
+Last modified  9 Nov 97 by trent 
+<!-- hhmts end -->
+</address>
+</body>
+</html>
+SPAM
+
+done
+
+exit 1
